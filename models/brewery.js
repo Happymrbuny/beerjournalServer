@@ -4,7 +4,8 @@ const Schema = mongoose.Schema;
 const brewerySchema = new Schema({
     name: {
         type: String,
-        required: true
+        required: true,
+        unique: true
     },
     image: {
         type: String,
