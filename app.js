@@ -3,6 +3,10 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+const session = require('express-session');
+const FileStore = require('session-file-store')(session);
+const passport = require('passport');
+const authenticate = require('./authenticate');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
@@ -18,9 +22,9 @@ const connect = mongoose.connect(url, {
   useFindAndModify: false,
   useNewUrlParser: true,
   useUnifiedTopology: true
-})
+});
 
-connect.then(() => console.log('Connected correctly to the server'),
+connect.then(() => console.log('Connected correctly to server'),
   err => console.log(err)
 );
 
@@ -33,11 +37,38 @@ app.set('view engine', 'jade');
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+//app.use(cookieParser('12345-67890-09876-54321'));
+
+app.use(session({
+  name: 'session-id',
+  secret: '12345-67890-09876-54321',
+  saveUninitialized: false,
+  resave: false,
+  store: new FileStore()
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+
+function auth(req, res, next) {
+  console.log(req.user);
+
+  if (!req.user) {
+    const err = new Error('You are not authenticated!');
+    err.status = 401;
+    return next(err);
+  } else {
+    return next();
+  }
+}
+
+app.use(auth);
+
+app.use(express.static(path.join(__dirname, 'public')));
+
 app.use('/beers', beerRouter);
 app.use('/breweries', breweryRouter);
 app.use('/events', eventRouter);
