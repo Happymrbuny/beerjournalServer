@@ -1,5 +1,6 @@
 const express = require('express');
 const Beer = require('../models/beer');
+const authenticate = require('../authenticate');
 
 const beerRouter = express.Router();
 
@@ -13,7 +14,7 @@ beerRouter.route('/')
             })
             .catch(err => next(err));
     })
-    .post((req, res, next) => {
+    .post(authenticate.verifyUser, (req, res, next) => {
         Beer.create(req.body)
             .then(beer => {
                 console.log('Beer created ', beer);
@@ -23,11 +24,11 @@ beerRouter.route('/')
             })
             .catch(err => next(err));
     })
-    .put((req, res) => {
+    .put(authenticate.verifyUser, (req, res) => {
         res.statusCode = 403;
         res.end('PUT operation not supported on /beers');
     })
-    .delete((req, res, next) => {
+    .delete(authenticate.verifyUser, (req, res, next) => {
         Beer.deleteMany()
             .then(response => {
                 res.statusCode = 200;
@@ -47,10 +48,10 @@ beerRouter.route('/:beerId')
             })
             .catch(err => next(err));
     })
-    .post((req, res) => {
+    .post(authenticate.verifyUser, (req, res) => {
         res.end(`POST operation not supported on /beers/${req.params.beerId}`);
     })
-    .put((req, res) => {
+    .put(authenticate.verifyUser, (req, res) => {
         Beer.findByIdAndUpdate(req.params.beerId, {
             $set: req.body
         }, { new: true })
@@ -61,7 +62,7 @@ beerRouter.route('/:beerId')
             })
             .catch(err => next(err));
     })
-    .delete((req, res, next) => {
+    .delete(authenticate.verifyUser, (req, res, next) => {
         Beer.findByIdAndDelete(req.params.beerId)
             .then(response => {
                 res.statusCode = 200;
@@ -87,7 +88,7 @@ beerRouter.route('/:beerId/comments')
             })
             .catch(err => next(err));
     })
-    .post((req, res, next) => {
+    .post(authenticate.verifyUser, (req, res, next) => {
         Beer.findById(req.params.beerId)
             .then(beer => {
                 if (beer) {
@@ -107,11 +108,11 @@ beerRouter.route('/:beerId/comments')
             })
             .catch(err => next(err));
     })
-    .put((req, res) => {
+    .put(authenticate.verifyUser, (req, res) => {
         res.statusCode = 403;
         res.end(`PUT operation not supported on /beers/${req.params.beerId}/comments`);
     })
-    .delete((req, res, next) => {
+    .delete(authenticate.verifyUser, (req, res, next) => {
         Beer.findById(req.params.beerId)
             .then(beer => {
                 if (beer) {
@@ -154,11 +155,11 @@ beerRouter.route('/:beerId/comments/:commentId')
             })
             .catch(err => next(err));
     })
-    .post((req, res) => {
+    .post(authenticate.verifyUser, (req, res) => {
         res.statusCode = 403;
         res.end(`POST operation not supported on /beers/${req.params.beerId}/comments/${req.params.commentId}`);
     })
-    .put((req, res, next) => {
+    .put(authenticate.verifyUser, (req, res, next) => {
         Beer.findById(req.params.beerId)
             .then(beer => {
                 if (beer && beer.comments.id(req.params.commentId)) {
@@ -187,7 +188,7 @@ beerRouter.route('/:beerId/comments/:commentId')
             })
             .catch(err => next(err));
     })
-    .delete((req, res, next) => {
+    .delete(authenticate.verifyUser, (req, res, next) => {
         Beer.findById(req.params.beerId)
             .then(beer => {
                 if (beer && beer.comments.id(req.params.commentId)) {
