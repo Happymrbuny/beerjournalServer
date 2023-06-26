@@ -1,11 +1,13 @@
 const express = require('express');
 const Beer = require('../models/beer');
 const authenticate = require('../authenticate');
+const cors = require('./cors');
 
 const beerRouter = express.Router();
 
 beerRouter.route('/')
-    .get((req, res, next) => {
+    .options(cors.corsWithOptions, (req, res) => res.sendStatus(200))
+    .get(cors.cors, (req, res, next) => {
         Beer.find()
             .populate('comments.author')
             .then(beers => {
@@ -15,7 +17,7 @@ beerRouter.route('/')
             })
             .catch(err => next(err));
     })
-    .post(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
+    .post(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
         Beer.create(req.body)
             .then(beer => {
                 console.log('Beer created ', beer);
@@ -25,11 +27,11 @@ beerRouter.route('/')
             })
             .catch(err => next(err));
     })
-    .put(authenticate.verifyUser, (req, res) => {
+    .put(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res) => {
         res.statusCode = 403;
         res.end('PUT operation not supported on /beers');
     })
-    .delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
+    .delete(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
         Beer.deleteMany()
             .then(response => {
                 res.statusCode = 200;
@@ -40,7 +42,8 @@ beerRouter.route('/')
     });
 
 beerRouter.route('/:beerId')
-    .get((req, res, next) => {
+    .options(cors.corsWithOptions, (req, res) => res.sendStatus(200))
+    .get(cors.cors, (req, res, next) => {
         Beer.findById(req.params.beerId)
             .populate('comments.author')
             .then(beer => {
@@ -50,10 +53,10 @@ beerRouter.route('/:beerId')
             })
             .catch(err => next(err));
     })
-    .post(authenticate.verifyUser, (req, res) => {
+    .post(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res) => {
         res.end(`POST operation not supported on /beers/${req.params.beerId}`);
     })
-    .put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res) => {
+    .put(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
         Beer.findByIdAndUpdate(req.params.beerId, {
             $set: req.body
         }, { new: true })
@@ -64,7 +67,7 @@ beerRouter.route('/:beerId')
             })
             .catch(err => next(err));
     })
-    .delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
+    .delete(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
         Beer.findByIdAndDelete(req.params.beerId)
             .then(response => {
                 res.statusCode = 200;
@@ -75,7 +78,8 @@ beerRouter.route('/:beerId')
     });
 
 beerRouter.route('/:beerId/comments')
-    .get((req, res, next) => {
+    .options(cors.corsWithOptions, (req, res) => res.sendStatus(200))
+    .get(cors.cors, (req, res, next) => {
         Beer.findById(req.params.beerId)
             .populate('comments.author')
             .then(beer => {
@@ -91,7 +95,7 @@ beerRouter.route('/:beerId/comments')
             })
             .catch(err => next(err));
     })
-    .post(authenticate.verifyUser, (req, res, next) => {
+    .post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
         Beer.findById(req.params.beerId)
             .then(beer => {
                 if (beer) {
@@ -112,11 +116,11 @@ beerRouter.route('/:beerId/comments')
             })
             .catch(err => next(err));
     })
-    .put(authenticate.verifyUser, (req, res) => {
+    .put(cors.corsWithOptions, authenticate.verifyUser, (req, res) => {
         res.statusCode = 403;
         res.end(`PUT operation not supported on /beers/${req.params.beerId}/comments`);
     })
-    .delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
+    .delete(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
         Beer.findById(req.params.beerId)
             .then(beer => {
                 if (beer) {
@@ -140,7 +144,8 @@ beerRouter.route('/:beerId/comments')
     });
 
 beerRouter.route('/:beerId/comments/:commentId')
-    .get((req, res, next) => {
+    .options(cors.corsWithOptions, (req, res) => res.sendStatus(200))
+    .get(cors.cors, (req, res, next) => {
         Beer.findById(req.params.beerId)
             .populate('comments.author')
             .then(beer => {
@@ -160,11 +165,11 @@ beerRouter.route('/:beerId/comments/:commentId')
             })
             .catch(err => next(err));
     })
-    .post(authenticate.verifyUser, (req, res) => {
+    .post(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res) => {
         res.statusCode = 403;
         res.end(`POST operation not supported on /beers/${req.params.beerId}/comments/${req.params.commentId}`);
     })
-    .put(authenticate.verifyUser, (req, res, next) => {
+    .put(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
         Beer.findById(req.params.beerId)
             .then(beer => {
                 if (beer && beer.comments.id(req.params.commentId)) {
@@ -193,7 +198,7 @@ beerRouter.route('/:beerId/comments/:commentId')
             })
             .catch(err => next(err));
     })
-    .delete(authenticate.verifyUser, (req, res, next) => {
+    .delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
         Beer.findById(req.params.beerId)
             .then(beer => {
                 if (beer && beer.comments.id(req.params.commentId)) {
