@@ -10,6 +10,7 @@ var usersRouter = require('./routes/users');
 const beerRouter = require('./routes/beerRouter');
 const breweryRouter = require('./routes/breweryRouter');
 const eventRouter = require('./routes/eventRouter');
+const uploadRouter = require('./routes/uploadRouter');
 
 const mongoose = require('mongoose');
 
@@ -56,6 +57,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/beers', beerRouter);
 app.use('/breweries', breweryRouter);
 app.use('/events', eventRouter);
+
+app.use('/imageUpload', uploadRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
