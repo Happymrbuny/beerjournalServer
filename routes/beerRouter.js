@@ -7,6 +7,7 @@ const beerRouter = express.Router();
 beerRouter.route('/')
     .get((req, res, next) => {
         Beer.find()
+            .populate('comments.author')
             .then(beers => {
                 res.statusCode = 200;
                 res.setHeader('Content-Type', 'application/json');
@@ -41,6 +42,7 @@ beerRouter.route('/')
 beerRouter.route('/:beerId')
     .get((req, res, next) => {
         Beer.findById(req.params.beerId)
+            .populate('comments.author')
             .then(beer => {
                 res.statusCode = 200;
                 res.setHeader('Content-Type', 'application/json');
@@ -75,6 +77,7 @@ beerRouter.route('/:beerId')
 beerRouter.route('/:beerId/comments')
     .get((req, res, next) => {
         Beer.findById(req.params.beerId)
+            .populate('comments.author')
             .then(beer => {
                 if (beer) {
                     res.statusCode = 200;
@@ -92,6 +95,7 @@ beerRouter.route('/:beerId/comments')
         Beer.findById(req.params.beerId)
             .then(beer => {
                 if (beer) {
+                    req.body.author = req.user._id;
                     beer.comments.push(req.body);
                     beer.save()
                         .then(beer => {
@@ -138,6 +142,7 @@ beerRouter.route('/:beerId/comments')
 beerRouter.route('/:beerId/comments/:commentId')
     .get((req, res, next) => {
         Beer.findById(req.params.beerId)
+            .populate('comments.author')
             .then(beer => {
                 if (beer && beer.comments.id(req.params.commentId)) {
                     res.statusCode = 200;

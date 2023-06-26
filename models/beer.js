@@ -13,8 +13,8 @@ const commentSchema = new Schema({
         requried: true
     },
     author: {
-        type: String,
-        required: true
+        type: Schema.Types.ObjectId,
+        ref: 'User'
     }
 }, {
     timestamps: true
