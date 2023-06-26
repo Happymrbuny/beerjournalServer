@@ -1,10 +1,11 @@
 const express = require('express');
 const Event = require('../models/event');
+const authenticate = require('../authenticate');
 
 const eventRouter = express.Router();
 
 eventRouter.route('/')
-    .get((req, res, next) => {
+    .get(authenticate.verifyUser, (req, res, next) => {
         Event.find()
             .then(events => {
                 res.statusCode = 200;
@@ -13,7 +14,7 @@ eventRouter.route('/')
             })
             .catch(err => next(err));
     })
-    .post((req, res, next) => {
+    .post(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
         Event.create(req.body)
             .then(event => {
                 console.log('Event created ', event);
@@ -23,11 +24,11 @@ eventRouter.route('/')
             })
             .catch(err => next(err));
     })
-    .put((req, res) => {
+    .put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res) => {
         res.statusCode = 403;
         res.end('PUT operation not supported on /events');
     })
-    .delete((req, res, next) => {
+    .delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
         Event.deleteMany()
             .then(response => {
                 res.statusCode = 200;
@@ -38,7 +39,7 @@ eventRouter.route('/')
     });
 
 eventRouter.route('/:eventId')
-    .get((req, res, next) => {
+    .get(authenticate.verifyUser, (req, res, next) => {
         Event.findById(req.params.eventId)
             .then(event => {
                 res.statusCode = 200;
@@ -47,10 +48,10 @@ eventRouter.route('/:eventId')
             })
             .catch(err => next(err));
     })
-    .post((req, res) => {
+    .post(authenticate.verifyUser, authenticate.verifyAdmin, (req, res) => {
         res.end(`POST operation not supported on /events/${req.params.eventId}`);
     })
-    .put((req, res) => {
+    .put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res) => {
         Event.findByIdAndUpdate(req.params.eventId, {
             $set: req.body
         }, { new: true })
@@ -61,7 +62,7 @@ eventRouter.route('/:eventId')
             })
             .catch(err => next(err));
     })
-    .delete((req, res, next) => {
+    .delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
         Event.findByIdAndDelete(req.params.eventId)
             .then(response => {
                 res.statusCode = 200;

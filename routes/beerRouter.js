@@ -15,7 +15,7 @@ beerRouter.route('/')
             })
             .catch(err => next(err));
     })
-    .post(authenticate.verifyUser, (req, res, next) => {
+    .post(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
         Beer.create(req.body)
             .then(beer => {
                 console.log('Beer created ', beer);
@@ -29,7 +29,7 @@ beerRouter.route('/')
         res.statusCode = 403;
         res.end('PUT operation not supported on /beers');
     })
-    .delete(authenticate.verifyUser, (req, res, next) => {
+    .delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
         Beer.deleteMany()
             .then(response => {
                 res.statusCode = 200;
@@ -53,7 +53,7 @@ beerRouter.route('/:beerId')
     .post(authenticate.verifyUser, (req, res) => {
         res.end(`POST operation not supported on /beers/${req.params.beerId}`);
     })
-    .put(authenticate.verifyUser, (req, res) => {
+    .put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res) => {
         Beer.findByIdAndUpdate(req.params.beerId, {
             $set: req.body
         }, { new: true })
@@ -64,7 +64,7 @@ beerRouter.route('/:beerId')
             })
             .catch(err => next(err));
     })
-    .delete(authenticate.verifyUser, (req, res, next) => {
+    .delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
         Beer.findByIdAndDelete(req.params.beerId)
             .then(response => {
                 res.statusCode = 200;
@@ -84,7 +84,7 @@ beerRouter.route('/:beerId/comments')
                     res.setHeader('Content-Type', 'application/json');
                     res.json(beer.comments);
                 } else {
-                    err = new Error(`Campsite ${req.params.beerId} not found`);
+                    err = new Error(`beer ${req.params.beerId} not found`);
                     err.status = 404;
                     return next(err);
                 }
@@ -105,7 +105,7 @@ beerRouter.route('/:beerId/comments')
                         })
                         .catch(err => next(err));
                 } else {
-                    err = new Error(`Campsite ${req.params.beerId} not found`);
+                    err = new Error(`beer ${req.params.beerId} not found`);
                     err.status = 404;
                     return next(err);
                 }
@@ -116,7 +116,7 @@ beerRouter.route('/:beerId/comments')
         res.statusCode = 403;
         res.end(`PUT operation not supported on /beers/${req.params.beerId}/comments`);
     })
-    .delete(authenticate.verifyUser, (req, res, next) => {
+    .delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
         Beer.findById(req.params.beerId)
             .then(beer => {
                 if (beer) {
@@ -131,7 +131,7 @@ beerRouter.route('/:beerId/comments')
                         })
                         .catch(err => next(err));
                 } else {
-                    err = new Error(`Campsite ${req.params.beerId} not found`);
+                    err = new Error(`beer ${req.params.beerId} not found`);
                     err.status = 404;
                     return next(err);
                 }
@@ -149,7 +149,7 @@ beerRouter.route('/:beerId/comments/:commentId')
                     res.setHeader('Content-Type', 'application/json');
                     res.json(beer.comments.id(req.params.commentId));
                 } else if (!beer) {
-                    err = new Error(`Campsite ${req.params.beerId} not found`);
+                    err = new Error(`beer ${req.params.beerId} not found`);
                     err.status = 404;
                     return next(err);
                 } else {
@@ -182,7 +182,7 @@ beerRouter.route('/:beerId/comments/:commentId')
                         })
                         .catch(err => next(err));
                 } else if (!beer) {
-                    err = new Error(`Campsite ${req.params.beerId} not found`);
+                    err = new Error(`beer ${req.params.beerId} not found`);
                     err.status = 404;
                     return next(err);
                 } else {
@@ -197,16 +197,22 @@ beerRouter.route('/:beerId/comments/:commentId')
         Beer.findById(req.params.beerId)
             .then(beer => {
                 if (beer && beer.comments.id(req.params.commentId)) {
-                    beer.comments.id(req.params.commentId).remove();
-                    beer.save()
-                        .then(beer => {
-                            res.statusCode = 200;
-                            res.setHeader('Content-Type', 'application/json');
-                            res.json(beer);
-                        })
-                        .catch(err => next(err));
+                    if (req.user._id.equals(beer.comments.id(req.params.commentId).author._id) || req.user.admin === true) {
+                        beer.comments.id(req.params.commentId).remove();
+                        beer.save()
+                            .then(beer => {
+                                res.statusCode = 200;
+                                res.setHeader('Content-Type', 'application/json');
+                                res.json(beer);
+                            })
+                            .catch(err => next(err));
+                    } else {
+                        err = new Error('You are not authorized to delete this comment.');
+                        err.status = 403;
+                        return next(err);
+                    }
                 } else if (!beer) {
-                    err = new Error(`Campsite ${req.params.beerId} not found`);
+                    err = new Error(`Beer ${req.params.beerId} not found`);
                     err.status = 404;
                     return next(err);
                 } else {
