@@ -10,6 +10,7 @@ var usersRouter = require('./routes/users');
 const beerRouter = require('./routes/beerRouter');
 const breweryRouter = require('./routes/breweryRouter');
 const eventRouter = require('./routes/eventRouter');
+const favoriteRouter = require('./routes/favoriteRouter');
 const uploadRouter = require('./routes/uploadRouter');
 
 const mongoose = require('mongoose');
@@ -57,6 +58,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/beers', beerRouter);
 app.use('/breweries', breweryRouter);
 app.use('/events', eventRouter);
+app.use('/myBeers', favoriteRouter);
 
 app.use('/imageUpload', uploadRouter);
 
