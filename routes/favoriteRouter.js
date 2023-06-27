@@ -20,9 +20,7 @@ favoriteRouter.route('/')
     .post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
         Favorite.findOne({ user: req.user._id })
             .then(favorite => {
-                console.log('error', favorite);
                 if (favorite) {
-                    console.log('error 1');
                     req.body.forEach(favBeer => {
                         if (!favorite.beers.includes(favBeer._id)) {
                             favorite.beers.push(favBeer._id);
@@ -36,7 +34,6 @@ favoriteRouter.route('/')
                         })
                         .catch(err => next(err));
                 } else {
-                    console.log('error 2');
                     Favorite.create({ user: req.user._id })
                         .then(favorite => {
                             req.body.forEach(favBeer => {
